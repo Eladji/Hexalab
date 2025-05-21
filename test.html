@@ -1,0 +1,215 @@
+-- -------------------------------------------
+-- 1. CREATING USERS
+-- -------------------------------------------
+
+-- Create a regular user
+INSERT INTO `User` (`First_Name`, `Last_Name`, `Certified`)
+VALUES ('Alice', 'Wonderland', TRUE); -- Let's say Alice is certified
+
+-- Create another user who will become an admin
+INSERT INTO `User` (`First_Name`, `Last_Name`)
+VALUES ('Bob', 'The Builder'); -- Certified defaults to FALSE
+
+-- Create a third user
+INSERT INTO `User` (`First_Name`, `Last_Name`, `Certified`)
+VALUES ('Charlie', 'Brown', FALSE);
+
+-- Let's get their IDs (assuming Alice is 1, Bob is 2, Charlie is 3 for these examples)
+-- SELECT id, First_Name FROM User;
+
+-- -------------------------------------------
+-- 2. MAKING A USER AN ADMIN
+-- -------------------------------------------
+
+-- Make Bob (User ID 2) an Admin
+INSERT INTO `Admin` (`User_Id`)
+VALUES (2); -- Assuming Bob's User.id is 2
+
+-- -------------------------------------------
+-- 3. CREATING CONTENT TYPES
+-- -------------------------------------------
+INSERT INTO `Type_Content` (`Name`) VALUES ('Tutorial');
+INSERT INTO `Type_Content` (`Name`) VALUES ('Blog Post');
+INSERT INTO `Type_Content` (`Name`) VALUES ('Research Paper');
+
+-- Let's get their IDs (assuming Tutorial is 1, Blog Post is 2, Research Paper is 3)
+-- SELECT id, Name FROM Type_Content;
+
+-- -------------------------------------------
+-- 4. USERS CREATING CONTENT
+-- -------------------------------------------
+
+-- Alice (User ID 1) creates a Tutorial (Type ID 1)
+INSERT INTO `Content` (`Name`, `Description`, `Path`, `Author_Id`, `Type_Id`)
+VALUES (
+    'Introduction to SQL',
+    'A beginner-friendly guide to SQL basics.',
+    '/content/sql-intro.pdf',
+    1, -- Alice's User ID
+    1  -- Tutorial Type ID
+);
+
+-- Bob (User ID 2) creates a Blog Post (Type ID 2), with Alice (User ID 1) as a contributor
+INSERT INTO `Content` (`Name`, `Description`, `Path`, `Author_Id`, `Type_Id`, `Contributor_Id`)
+VALUES (
+    'Advanced Woodworking Techniques',
+    'Exploring joinery and finishing.',
+    '/content/woodworking-advanced.html',
+    2, -- Bob's User ID
+    2, -- Blog Post Type ID
+    1  -- Alice's User ID as contributor
+);
+
+-- Let's get Content IDs (assuming SQL Intro is 1, Woodworking is 2)
+-- SELECT id, Name FROM Content;
+
+-- -------------------------------------------
+-- 5. USERS COMMENTING ON CONTENT
+-- -------------------------------------------
+
+-- Charlie (User ID 3) comments on 'Introduction to SQL' (Content ID 1)
+INSERT INTO `Comment` (`Content`, `Author_Id`, `Post_Id`)
+VALUES (
+    'Great tutorial, very helpful for beginners!',
+    3, -- Charlie's User ID
+    1  -- 'Introduction to SQL' Content ID
+);
+
+-- Alice (User ID 1) replies to Charlie's comment (assuming Charlie's comment ID is 1)
+INSERT INTO `Comment` (`Content`, `Author_Id`, `Post_Id`, `Replied_To_Comment_Id`)
+VALUES (
+    'Thanks, Charlie! Glad you found it useful.',
+    1, -- Alice's User ID
+    1, -- 'Introduction to SQL' Content ID
+    1  -- Charlie's Comment ID
+);
+
+-- -------------------------------------------
+-- 6. CREATING PERIPHERALS
+-- -------------------------------------------
+INSERT INTO `Peripheric` (`Name`, `Type`, `Description`)
+VALUES ('Microscope Model X', 'Optical', 'High-resolution lab microscope');
+INSERT INTO `Peripheric` (`Name`, `Type`, `Description`)
+VALUES ('3D Printer Pro', 'Fabrication', 'Desktop FDM 3D printer');
+
+-- Let's get Peripheric IDs (assuming Microscope is 1, 3D Printer is 2)
+-- SELECT id, Name FROM Peripheric;
+
+-- -------------------------------------------
+-- 7. USERS MAKING REQUESTS
+-- -------------------------------------------
+
+-- Charlie (User ID 3) requests access to 'Introduction to SQL' (Content ID 1)
+-- using 'Microscope Model X' (Peripheric ID 1) - maybe a bit of a stretch for SQL, but for example's sake
+-- State 0: Pending
+INSERT INTO `Request` (`Requester_Id`, `State`, `Content_Id`, `Peripheric_Id`)
+VALUES (
+    3, -- Charlie's User ID
+    0, -- Pending
+    1, -- 'Introduction to SQL' Content ID
+    1  -- 'Microscope Model X' Peripheric ID
+);
+
+-- -------------------------------------------
+-- 8. ADMINS HANDLING REQUESTS
+-- -------------------------------------------
+
+-- Bob (Admin User ID 2) approves Charlie's request (assuming Request ID is 1)
+-- State 1: Approved
+UPDATE `Request`
+SET
+    `State` = 1,
+    `Admin_Id` = 2 -- Bob's User ID (who is an admin)
+WHERE `id` = 1; -- Assuming the request ID for Charlie is 1
+
+-- -------------------------------------------
+-- 9. CREATING NOTIFICATIONS
+-- -------------------------------------------
+
+-- Notify Charlie (User ID 3) that his request was approved
+INSERT INTO `Notification` (`Receiver_Id`, `Content`)
+VALUES (
+    3, -- Charlie's User ID
+    'Your request for "Introduction to SQL" has been approved!'
+);
+
+-- -------------------------------------------
+-- 10. QUERYING DATA (EXAMPLES)
+-- -------------------------------------------
+
+-- Get all content created by Alice (User ID 1)
+SELECT c.Name, c.Description, c.Creation_Date, tc.Name AS Content_Type
+FROM `Content` c
+JOIN `Type_Content` tc ON c.Type_Id = tc.id
+WHERE c.Author_Id = 1;
+
+-- Get all comments for 'Introduction to SQL' (Content ID 1), showing commenter's name
+SELECT cm.Content, u.First_Name AS Commenter_FirstName, u.Last_Name AS Commenter_LastName, cm.Replied_To_Comment_Id
+FROM `Comment` cm
+JOIN `User` u ON cm.Author_Id = u.id
+WHERE cm.Post_Id = 1
+ORDER BY cm.id; -- Usually you'd order by a timestamp if comments had one
+
+-- Get all requests that are currently 'Pending' (State 0)
+SELECT r.id AS Request_ID, u.First_Name AS Requester_FirstName, c.Name AS Content_Name, p.Name AS Peripheric_Name
+FROM `Request` r
+JOIN `User` u ON r.Requester_Id = u.id
+JOIN `Content` c ON r.Content_Id = c.id
+JOIN `Peripheric` p ON r.Peripheric_Id = p.id
+WHERE r.State = 0;
+
+-- Get user details and indicate if they are an admin
+SELECT u.id, u.First_Name, u.Last_Name, u.Certified,
+       CASE WHEN a.User_Id IS NOT NULL THEN TRUE ELSE FALSE END AS Is_Admin
+FROM `User` u
+LEFT JOIN `Admin` a ON u.id = a.User_Id;
+
+-- Get content with its author's first name and last name
+SELECT c.Name AS Content_Name, c.Description, u.First_Name AS Author_FirstName, u.Last_Name AS Author_LastName
+FROM `Content` c
+JOIN `User` u ON c.Author_Id = u.id;
+
+-- Get a specific request and the admin who handled it (if any)
+SELECT
+    r.id AS RequestId,
+    req_user.First_Name AS Requester_FirstName,
+    req_user.Last_Name AS Requester_LastName,
+    c.Name AS ContentName,
+    r.State,
+    admin_user.First_Name AS Admin_FirstName,
+    admin_user.Last_Name AS Admin_LastName
+FROM `Request` r
+JOIN `User` req_user ON r.Requester_Id = req_user.id
+JOIN `Content` c ON r.Content_Id = c.id
+LEFT JOIN `Admin` adm ON r.Admin_Id = adm.User_Id -- Join Admin table
+LEFT JOIN `User` admin_user ON adm.User_Id = admin_user.id -- Join User table again for admin details
+WHERE r.id = 1; -- Example for a specific request ID
+
+
+-- -------------------------------------------
+-- 11. DELETING DATA (WITH FOREIGN KEY CONSIDERATIONS)
+-- -------------------------------------------
+-- Your FOREIGN KEY constraints are set to ON UPDATE NO ACTION ON DELETE NO ACTION.
+-- This means you cannot delete a parent row if child rows reference it.
+
+-- Example: Try to delete Alice (User ID 1)
+-- DELETE FROM `User` WHERE `id` = 1;
+-- This would FAIL if Alice has authored content, comments, or has notifications, etc.,
+-- because those child records reference her ID.
+
+-- To delete Alice, you would first need to:
+-- 1. Delete or reassign her comments.
+-- 2. Delete or reassign her content (or set Author_Id to NULL if allowed, currently it's NOT NULL).
+-- 3. Delete her notifications.
+-- 4. Remove her from Admin table (if she was an admin).
+-- 5. Delete her from Request table (if she made requests or was assigned as admin).
+-- ...and so on for any table that references User.id for Alice.
+
+-- Example: Delete a comment that has no replies
+-- (Assuming a comment with ID 5 has no replies to it)
+-- DELETE FROM `Comment` WHERE `id` = 5 AND `id` NOT IN (SELECT DISTINCT `Replied_To_Comment_Id` FROM `Comment` WHERE `Replied_To_Comment_Id` IS NOT NULL);
+
+-- If a comment (e.g., ID 1 by Charlie) has a reply (e.g., ID 2 by Alice replying to 1),
+-- trying to delete Charlie's comment (ID 1) would fail:
+-- DELETE FROM `Comment` WHERE `id` = 1; -- This would fail because comment ID 2 references it.
+-- You would need to delete Alice's reply (ID 2) first, or set its `Replied_To_Comment_Id` to NULL.
