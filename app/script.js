@@ -1,51 +1,123 @@
-fetch('https://jsonplaceholder.typicode.com/photos?_limit=50') // Using JSONPlaceholder API, limiting to 50 items
-  .then(response => response.json())
-  .then(data => {
-    // const array = data.items; // Adjust according to your API response structure
-    const array = data; // For JSONPlaceholder /photos, the array is the data itself
-    array.forEach(element => {
-        const card = document.createElement('div');
-    card.className = 'card';
-    card.onclick = function() { this.classList.toggle('expanded'); };
+function loadapi() {
+  document.addEventListener("DOMContentLoaded", function () {
+    fetch(
+      "https://api.sketchfab.com/v3/models?sort_by=createdAt&categories=electronics-gadgets&downloadable=true&restricted=false&archives_flavours=false&offset=19&limit=1"
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        // Sketchfab v3 wraps models in `results`
+        const models = data.results;
+        const container = document.querySelector(".card-container");
+        if (!container) {
+          console.error("Container with class 'card-container' not found.");
+          return;
+        }
 
-    const img = document.createElement('img');
-    // Use thumbnailUrl for the data-src and url for a higher quality if needed
-    img.setAttribute('data-src', element.thumbnailUrl); 
-    img.alt = element.title || 'Image'; 
-    img.classList.add('lazy'); 
-    card.appendChild(img);
+        models.forEach((model) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.onclick = () => card.classList.toggle("expanded");
+          // pick the first available thumbnail image
+          const thumbUrl = model.thumbnails?.images?.[0]?.url || "";
 
-    const cardBody = document.createElement('div');
-    cardBody.className = 'card-body';
+          const img = document.createElement("img");
+          img.dataset.src = thumbUrl;
+          img.alt = model.name || "Model thumbnail";
+          img.classList.add("lazy");
+          card.appendChild(img);
 
-    const title = document.createElement('h3');
-    title.className = 'card-title';
-    title.textContent = element.title || 'Card Title'; 
-    cardBody.appendChild(title);
+          const body = document.createElement("div");
+          body.className = "card-body";
 
-    const desc = document.createElement('p');
-    desc.className = 'card-desc';
-    // JSONPlaceholder /photos doesn't have a description, so we'll use the title or a generic one
-    desc.textContent = element.title || 'Description for card.'; 
-    cardBody.appendChild(desc);
+          const title = document.createElement("h3");
+          title.className = "card-title";
+          title.textContent = model.name || "Untitled";
+          body.appendChild(title);
 
-    const author = document.createElement('p');
-    author.className = 'card-author';
-    // JSONPlaceholder /photos doesn't have an author, so we'll use a generic one or omit
-    author.textContent = 'Album ID: ' + element.albumId; 
-    cardBody.appendChild(author);
+          const desc = document.createElement("p");
+          desc.className = "card-desc";
+          count = 25;
+          var text = "default"
+          text = model.description.slice(0, count) + (text.length > count ? "..." : "");
+          desc.textContent = text || "No description.";
+          body.appendChild(desc);
 
-    card.appendChild(cardBody);
+          const author = document.createElement("p");
+          author.className = "card-author";
+          author.textContent = `Author: ${model.user.displayName || "Unknown"}`;
+          body.appendChild(author);
 
-    // Append card to a container in your HTML, e.g.:
-    const container = document.querySelector('card-container');
-    if (container) {
-        container.appendChild(card);
+          const viewBtn = document.createElement("a");
+          viewBtn.className = "card-btn";
+          viewBtn.href = `https://sketchfab.com/3d-models/${model.uid}`;
+          viewBtn.target = "_blank";
+          viewBtn.textContent = "View";
+          viewBtn.onclick = function (event) {
+            event.stopPropagation(); // Prevents the click from bubbling to the card
+          };
+          body.appendChild(viewBtn);
+
+          body.appendChild(viewBtn);
+
+          card.appendChild(body);
+          container.appendChild(card);
+        });
+
+        initializeLazyLoading();
+      })
+      .catch((err) => console.error("Error fetching or processing data:", err));
+  });
+
+  function initializeLazyLoading() {
+    let lazyImages = Array.from(document.querySelectorAll("img.lazy"));
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.classList.remove("lazy");
+            obs.unobserve(img);
+          }
+        });
+      });
+
+      lazyImages.forEach((img) => observer.observe(img));
     } else {
-        console.error("Container with class 'cards-container' not found.");
-    }
-    });
+      // fallback
+      let active = false;
+      const lazyLoad = () => {
+        if (active) return;
+        active = true;
+        setTimeout(() => {
+          lazyImages = lazyImages.filter((img) => {
+            const rect = img.getBoundingClientRect();
+            if (
+              rect.top <= window.innerHeight &&
+              rect.bottom >= 0 &&
+              getComputedStyle(img).display !== "none"
+            ) {
+              img.src = img.dataset.src;
+              img.classList.remove("lazy");
+              return false;
+            }
+            return true;
+          });
+          if (lazyImages.length === 0) {
+            document.removeEventListener("scroll", lazyLoad);
+            window.removeEventListener("resize", lazyLoad);
+            window.removeEventListener("orientationchange", lazyLoad);
+          }
+          active = false;0
+        }, 200);
+      };
 
-    // Lazy loading with IntersectionObserver
-// ...existing code...
-  })
+      document.addEventListener("scroll", lazyLoad);
+      window.addEventListener("resize", lazyLoad);
+      window.addEventListener("orientationchange", lazyLoad);
+      lazyLoad();
+    }
+  }
+}
+loadapi();

@@ -6,14 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hexalab</title>
     <link rel="stylesheet" href="style/style.css">
-    <link rel="icon" href="logo.ico" type="image/x-icon">
+    <link rel="icon" href="media/logo.ico" type="image/x-icon">
 </head>
     <header class="site-header">
         <div class="header-inner container">
             <!-- Logo -->
             <div class="logo">
                 <a href="./index.php">
-                    <img src="logo.png" alt="Site Logo">
+                    <img src="media/logo.ico" alt="Site Logo">
                 </a>
             </div>
 

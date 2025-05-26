@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql
--- Generation Time: May 20, 2025 at 09:35 AM
+-- Generation Time: May 26, 2025 at 09:32 AM
 -- Server version: 8.0.42
 -- PHP Version: 8.2.27
 
@@ -31,6 +31,13 @@ CREATE TABLE `Admin` (
   `User_Id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `Admin`
+--
+
+INSERT INTO `Admin` (`User_Id`) VALUES
+(2);
+
 -- --------------------------------------------------------
 
 --
@@ -44,6 +51,14 @@ CREATE TABLE `Comment` (
   `Replied_To_Comment_Id` int DEFAULT NULL,
   `Post_Id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `Comment`
+--
+
+INSERT INTO `Comment` (`id`, `Content`, `Author_Id`, `Replied_To_Comment_Id`, `Post_Id`) VALUES
+(1, 'Great tutorial, very helpful for beginners!', 3, NULL, 1),
+(2, 'Thanks, Charlie! Glad you found it useful.', 1, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -62,6 +77,13 @@ CREATE TABLE `Content` (
   `Contributor_Id` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `Content`
+--
+
+INSERT INTO `Content` (`id`, `Name`, `Description`, `Creation_Date`, `Path`, `Author_Id`, `Type_Id`, `Contributor_Id`) VALUES
+(1, 'Introduction to SQL', 'A beginner-friendly guide to SQL basics.', '2025-05-19 09:38:30', '/content/sql-intro.pdf', 1, 1, NULL),
+(2, 'Advanced Woodworking Techniques', 'Exploring joinery and finishing.', '2025-05-19 09:38:30', '/content/woodworking-advanced.html', 2, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -74,6 +96,13 @@ CREATE TABLE `Notification` (
   `Receiver_Id` int NOT NULL,
   `Content` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `Notification`
+--
+
+INSERT INTO `Notification` (`id`, `Receiver_Id`, `Content`) VALUES
+(1, 3, 'Your request for \"Introduction to SQL\" has been approved!');
 
 -- --------------------------------------------------------
 
@@ -88,6 +117,13 @@ CREATE TABLE `Peripheric` (
   `Description` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `Peripheric`
+--
+
+INSERT INTO `Peripheric` (`id`, `Name`, `Type`, `Description`) VALUES
+(1, 'Microscope Model X', 'Optical', 'High-resolution lab microscope'),
+(2, '3D Printer Pro', 'Fabrication', 'Desktop FDM 3D printer');
 
 -- --------------------------------------------------------
 
@@ -104,6 +140,12 @@ CREATE TABLE `Request` (
   `Peripheric_Id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `Request`
+--
+
+INSERT INTO `Request` (`id`, `Requester_Id`, `State`, `Admin_Id`, `Content_Id`, `Peripheric_Id`) VALUES
+(1, 3, 1, 2, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -116,6 +158,15 @@ CREATE TABLE `Type_Content` (
   `Name` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `Type_Content`
+--
+
+INSERT INTO `Type_Content` (`id`, `Name`) VALUES
+(1, 'Tutorial'),
+(2, 'Blog Post'),
+(3, 'Research Paper');
+
 -- --------------------------------------------------------
 
 --
@@ -126,9 +177,18 @@ CREATE TABLE `User` (
   `id` int NOT NULL,
   `First_Name` varchar(50) NOT NULL,
   `Last_Name` varchar(50) NOT NULL,
-  `Certified` tinyint(1) NOT NULL DEFAULT '0'
+  `Certified` tinyint(1) NOT NULL DEFAULT '0',
+  `Pfp` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `User`
+--
+
+INSERT INTO `User` (`id`, `First_Name`, `Last_Name`, `Certified`, `Pfp`) VALUES
+(1, 'Alice', 'Wonderland', 1, ''),
+(2, 'Bob', 'The Builder', 0, ''),
+(3, 'Charlie', 'Brown', 0, '');
 
 --
 -- Indexes for dumped tables

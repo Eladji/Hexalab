@@ -5,18 +5,19 @@ class PeriphericController
 
     public function __construct()
     {
-        $env = getenv("USER"); // récupération des donnés d'environnement 
         // Connexion à la BDD
-        $host = "localhost";
-        $dbName = $env["MYSQL_DATABASE"];
-        $port = 8889;
-        $userName = "root";
-        $password = $env["MYSQL_ROOT_PASSWORD"];
+        $host = "mysql"; // Or your MySQL service name from docker-compose.yaml
+        $dbName = getenv("MYSQL_DATABASE");
+        $port = 3306; // Default MySQL port
+        $userName = getenv("MYSQL_USER");
+        $password = getenv("MYSQL_PASSWORD"); // Use MYSQL_PASSWORD
         try {
             $this->setDb(new PDO("mysql:host=$host;dbname=$dbName;port=$port;charset=utf8mb4", $userName, $password));
             //echo "Connexion réussie !";
         } catch (PDOException $error) {
-            echo "<p style='color:red'>{$error->getMessage()}</p>";
+            // Log the error and/or rethrow to stop execution if DB is critical
+            error_log("Database Connection Error: " . $error->getMessage());
+            throw new RuntimeException("Failed to connect to the database: " . $error->getMessage(), 0, $error);
         }
     }
     public function setDb(PDO $db): void

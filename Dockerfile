@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd zip \
     && pecl install xdebug \
-    && docker-php-ext-enable xdebug
+    && docker-php-ext-enable xdebug \
+    && docker-php-ext-install pdo_mysql
 
 # Enable display errors and set error log file
 COPY ./php.ini /usr/local/etc/php/conf.d/

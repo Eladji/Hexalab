@@ -1,23 +1,23 @@
 <?php
-
+require "Content.php"; // Assuming Content class is defined in Content.php
 class Contentcontroller
 {
     private PDO $db; // Instance de PDO
 
     public function __construct()
     {
-        $env = getenv("USER"); // récupération des donnés d'environnement 
         // Connexion à la BDD
-        $host = "localhost";
-        $dbName = $env["MYSQL_DATABASE"];
-        $port = 8889;
-        $userName = "root";
-        $password = $env["MYSQL_ROOT_PASSWORD"];
+        $host = "mysql"; // Or your MySQL service name from docker-compose.yaml
+        $dbName = "HexalabDB";
+        $port = 3306; // Default MySQL port
+        $userName = "app_user";
+        $password = "app_pass";
         try {
             $this->setDb(new PDO("mysql:host=$host;dbname=$dbName;port=$port;charset=utf8mb4", $userName, $password));
             //echo "Connexion réussie !";
         } catch (PDOException $error) {
-            echo "<p style='color:red'>{$error->getMessage()}</p>";
+            error_log("Database Connection Error: " . $error->getMessage());
+            throw new RuntimeException("Failed to connect to the database: " . $error->getMessage(), 0, $error);
         }
     }
 
@@ -26,7 +26,7 @@ class Contentcontroller
         $this->db = $db;
     }
 
-    public function createModel(Content $content): void
+    public function createContent(Content $content): void
     {
         $req = $this->db->prepare("INSERT INTO `Content` (Name, Description, Creation_Date, Path, Author_id, Type_id) VALUES (:name, :description, :creation_Date, :Path, :author_id, :type_id)");
 
@@ -40,15 +40,15 @@ class Contentcontroller
         $req->execute();
     }
 
-    public function updateModel(): void {}
+    public function updateContent(): void {}
 
-    public function deleteModel(int $id): void
+    public function deleteContent(int $id): void
     {
         $req = $this->db->prepare("DELETE FROM `Content` WHERE id=:id");
         $req->bindValue(":id", $id, PDO::PARAM_INT);
         $req->execute();
     }
-    public function getModelById(int $id): Content
+    public function getContentById(int $id): Content
     {
         $req = $this->db->prepare("SELECT * FROM `Content` WHERE id=:id");
         $req->bindValue(":id", $id, PDO::PARAM_INT);
@@ -57,7 +57,7 @@ class Contentcontroller
         return new Content($data);
     }
 
-    public function getModelByUserId(int $id): array
+    public function getContentByUserId(int $id): array
     {
         $content = [];
         $req = $this->db->prepare("SELECT * FROM `Content` WHERE Author_id=:id");
@@ -71,10 +71,10 @@ class Contentcontroller
     }
 
 
-    public function getAllModel(): array
+    public function getAllContents(): array
     {
         $content = [];
-        $req = $this->db->prepare("SELECT * FROM `Content` ORDER BY number");
+        $req = $this->db->prepare("SELECT * FROM `Content` ORDER BY id");
         $req->execute();
         $datas = $req->fetchAll();
         foreach ($datas as $data) {
@@ -83,7 +83,7 @@ class Contentcontroller
         return $content;
     }
 
-    public function getModelByName(string $name): Content
+    public function getContentByName(string $name): Content
     {
         $name = htmlspecialchars($name);
         $name = strip_tags($name);

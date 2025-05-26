@@ -17,7 +17,9 @@ class Content
     {
         foreach ($data as $key => $value) {
             // On récupère le nom du setter correspondant à l'attribut
-            $method = 'set' . ucfirst($key);
+            // Convertit les clés comme 'author_id' ou 'Author_id' en 'AuthorId'
+            $transformedKey = str_replace('_', '', ucwords(strtolower($key), '_'));
+            $method = 'set' . $transformedKey;
 
             // Si le setter existe dans la classe, on l'appelle
             if (method_exists($this, $method)) {

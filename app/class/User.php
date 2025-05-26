@@ -7,6 +7,7 @@ class User
     private string $lastName;
     private string $email;
     private string $password;
+    private string $pfp;
 
     # Méthodes
     public function __construct(array $data)
@@ -110,6 +111,24 @@ class User
     public function setPassword(string $password): self
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of pfp
+     */
+    public function getPfp(): string
+    {
+        return $this->pfp;
+    }
+
+    /**
+     * Set the value of pfp
+     */
+    public function setPfp(string $pfp): self
+    {
+        $this->pfp = $pfp;
 
         return $this;
     }
